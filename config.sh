@@ -5,6 +5,8 @@ MODEL_ID="${MODEL_ID:-Qwen/Qwen3-4B}"
 # 工作区（放模型/母版/量化产物）。大盘挂载后改成 /data/quant-pipeline
 WORK_DIR="${WORK_DIR:-$HOME/quant-pipeline}"
 LLAMA_CPP="${LLAMA_CPP:-$WORK_DIR/llama.cpp}"
+# 使用哪个编译产物目录：build=CPU版，build-cuda=GPU版（配合 NGL=99）
+BUILD_DIR="${BUILD_DIR:-build}"
 
 # 量化档位（对标 bartowski，覆盖高/中/低质量）
 QUANT_TIERS=(Q8_0 Q6_K Q5_K_M Q4_K_M IQ4_XS IQ3_M Q2_K)

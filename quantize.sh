@@ -16,9 +16,9 @@ IMATRIX="$IMATRIX_DIR/${MODEL_NAME}.imatrix"
 LOG="$WORK_DIR/timing-${MODEL_NAME}.log"
 
 CONVERT="$LLAMA_CPP/convert_hf_to_gguf.py"
-IMATRIX_BIN="$LLAMA_CPP/build/bin/llama-imatrix"
-QUANT_BIN="$LLAMA_CPP/build/bin/llama-quantize"
-CLI_BIN="$LLAMA_CPP/build/bin/llama-cli"
+IMATRIX_BIN="$LLAMA_CPP/$BUILD_DIR/bin/llama-imatrix"
+QUANT_BIN="$LLAMA_CPP/$BUILD_DIR/bin/llama-quantize"
+CLI_BIN="$LLAMA_CPP/$BUILD_DIR/bin/llama-cli"
 
 # 若在 venv 里跑，激活它
 [ -f "$WORK_DIR/venv/bin/activate" ] && source "$WORK_DIR/venv/bin/activate"
