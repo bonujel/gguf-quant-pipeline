@@ -1,0 +1,75 @@
+The quick brown fox jumps over the lazy dog. Machine learning models transform raw data into useful predictions through layers of weighted computation, and the quality of those predictions depends on both the training data and the architecture that consumes it.
+
+Large language models are trained on vast corpora of text, learning statistical regularities that let them continue a prompt in a coherent and contextually appropriate way. Quantization reduces the numerical precision of a model's weights so that it can run on cheaper hardware with only a small loss in output quality.
+
+In economics, the marginal cost of producing one additional unit tends to fall as fixed costs are spread across more output, until diminishing returns set in and each new unit becomes more expensive to make than the last.
+
+The history of computing is a story of abstraction: from vacuum tubes to transistors, from assembly language to high-level languages, each layer hides the complexity beneath it and lets engineers reason about larger and larger systems.
+
+Scientists observed that the reaction rate roughly doubled for every ten-degree rise in temperature, a rule of thumb that holds for many chemical processes near room temperature but breaks down at extremes.
+
+人工智能正在深刻改变各行各业。大语言模型通过在海量文本上训练，学会了语言的统计规律，从而能够生成连贯、切题的回答。模型量化则是把权重的数值精度降低，让模型可以在更便宜的硬件上运行，同时只损失很小的质量。
+
+在中国古代，丝绸之路连接了东西方的贸易与文化。商人们穿越沙漠与高山，把丝绸、瓷器和茶叶带到遥远的国度，也把异域的物产、宗教与思想带回中原，促成了不同文明之间的交流与融合。
+
+量化的常见档位包括 Q4_K_M、Q5_K_M、Q6_K 和 Q8_0。其中 Q4_K_M 通常是体积与质量的平衡点，能够在保留大部分能力的同时显著减小文件体积；而 Q8_0 几乎无损，但占用空间最大。
+
+天气预报依赖于对大气状态的数值模拟。气象学家收集温度、气压、湿度和风速等数据，输入到求解流体力学方程的模型中，从而预测未来几天的天气变化。
+
+经济学研究稀缺资源的配置。供给与需求共同决定市场价格：当价格上升时，供给通常增加而需求减少，市场趋向于达到一个均衡点。
+
+def quantize(weights, bits):
+    """Simple symmetric quantization of a weight tensor to the given bit width."""
+    qmax = (1 << (bits - 1)) - 1
+    scale = weights.abs().max() / qmax
+    q = (weights / scale).round().clamp(-qmax, qmax)
+    return q.to(int), scale
+
+import numpy as np
+
+def softmax(x):
+    x = x - np.max(x, axis=-1, keepdims=True)
+    e = np.exp(x)
+    return e / e.sum(axis=-1, keepdims=True)
+
+class RingBuffer:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.data = []
+    def push(self, item):
+        if len(self.data) >= self.capacity:
+            self.data.pop(0)
+        self.data.append(item)
+
+// C++: compute the sum of squares of a vector using STL
+#include <numeric>
+#include <vector>
+double sum_of_squares(const std::vector<double>& v) {
+    return std::inner_product(v.begin(), v.end(), v.begin(), 0.0);
+}
+
+func fibonacci(n int) int {
+    if n < 2 {
+        return n
+    }
+    a, b := 0, 1
+    for i := 2; i <= n; i++ {
+        a, b = b, a+b
+    }
+    return b
+}
+
+SELECT customer_id, SUM(amount) AS total
+FROM orders
+WHERE created_at >= '2026-01-01'
+GROUP BY customer_id
+HAVING SUM(amount) > 1000
+ORDER BY total DESC;
+
+The mitochondrion is often called the powerhouse of the cell because it generates most of the cell's supply of adenosine triphosphate, used as a source of chemical energy for a wide range of biological processes.
+
+Philosophers have long debated the nature of consciousness, asking whether subjective experience can ever be fully explained by physical processes in the brain, or whether something essential is left out of any purely mechanistic account.
+
+深度学习框架通常提供自动微分功能，能够根据前向计算图自动推导出梯度，从而让研究者专注于模型结构本身，而不必手工推导复杂的反向传播公式。
+
+在软件工程中，良好的抽象和清晰的接口设计能够显著降低系统的维护成本。当每个模块只暴露必要的功能、隐藏内部实现细节时，团队就可以并行开发、独立测试，并在需要时替换某个模块而不影响整体。

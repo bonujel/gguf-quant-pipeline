@@ -1,0 +1,13 @@
+# 工作区产物（模型、母版、量化、日志）不入库
+quant-pipeline/
+models_raw/
+gguf_master/
+imatrix/
+gguf_quant/
+*.gguf
+*.imatrix
+calibration.txt
+timing-*.log
+venv/
+__pycache__/
+llama.cpp/
