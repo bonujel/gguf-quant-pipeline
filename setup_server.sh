@@ -13,7 +13,9 @@ if [ ! -d "$WORK_DIR/venv" ]; then python3 -m venv "$WORK_DIR/venv"; fi
 # shellcheck disable=SC1091
 source "$WORK_DIR/venv/bin/activate"
 pip install -q -U pip
-pip install -q -U "huggingface_hub[hf_transfer]" cmake ninja
+# huggingface_hub 固定在 <1.0：1.x 与 transformers 的依赖检查冲突，会导致
+# convert_hf_to_gguf.py 里 import transformers 直接失败。
+pip install -q -U "huggingface_hub>=0.34,<1.0" hf_transfer cmake ninja
 
 echo "==> 拉取并编译 llama.cpp（CPU-only；-j 32 不抢满共享机）"
 if [ ! -d "$LLAMA_CPP" ]; then
@@ -21,6 +23,8 @@ if [ ! -d "$LLAMA_CPP" ]; then
 fi
 cd "$LLAMA_CPP"
 pip install -q -r requirements.txt
+# requirements 可能把 huggingface_hub 顶到 1.x，再次钉回 <1.0 保证可复现
+pip install -q "huggingface_hub>=0.34,<1.0" hf_transfer
 cmake -B build -DGGML_NATIVE=ON
 cmake --build build --config Release -j 32
 
