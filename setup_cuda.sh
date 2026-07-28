@@ -42,6 +42,8 @@ EOF
 echo "==> 已写 $WORK_DIR/cuda_env.sh"
 
 echo "==> 2. 用 CUDA 重编译 llama.cpp 到 build-cuda（H100=sm_90）"
+# cmake 装在 venv 里，激活以便使用
+[ -f "$WORK_DIR/venv/bin/activate" ] && source "$WORK_DIR/venv/bin/activate"
 cd "$LLAMA_CPP"
 cmake -B build-cuda -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=90 -DGGML_NATIVE=ON
 cmake --build build-cuda --config Release -j 32 --target llama-imatrix llama-quantize llama-cli

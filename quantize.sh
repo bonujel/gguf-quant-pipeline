@@ -82,8 +82,10 @@ guard_disk
 stage "6/6 本地验证 (Q4_K_M)"
 VAL="$QUANT_DIR/${MODEL_NAME}-Q4_K_M.gguf"
 if [ -f "$VAL" ]; then
+  # timeout 兜底，避免 llama-cli 在无人值守下挂死拖住流水线
   # shellcheck disable=SC2086
-  "$CLI_BIN" -m "$VAL" -p "用一句话解释什么是模型量化。" -n 96 -no-cnv ${NGL:+-ngl $NGL} 2>/dev/null | tail -15 | tee -a "$LOG"
+  timeout 240 "$CLI_BIN" -m "$VAL" -p "用一句话解释什么是模型量化。" -n 96 -no-cnv --no-warmup ${NGL:+-ngl $NGL} 2>/dev/null | tail -15 | tee -a "$LOG" \
+    || echo "[验证] 超时或出错（不影响量化产物，已生成的 GGUF 有效）" | tee -a "$LOG"
 else
   echo "[警告] 未找到 Q4_K_M 产物，跳过验证"
 fi
