@@ -15,7 +15,8 @@ source "$WORK_DIR/venv/bin/activate"
 pip install -q -U pip
 # huggingface_hub 固定在 <1.0：1.x 与 transformers 的依赖检查冲突，会导致
 # convert_hf_to_gguf.py 里 import transformers 直接失败。
-pip install -q -U "huggingface_hub>=0.34,<1.0" hf_transfer cmake ninja
+# tiktoken/blobfile：部分模型（如 Kimi）用 tiktoken 分词器，convert 需要
+pip install -q -U "huggingface_hub>=0.34,<1.0" hf_transfer cmake ninja tiktoken blobfile
 
 echo "==> 拉取并编译 llama.cpp（CPU-only；-j 32 不抢满共享机）"
 if [ ! -d "$LLAMA_CPP" ]; then
