@@ -1,4 +1,5 @@
-# 工作区产物（模型、母版、量化、日志）不入库
+# Working-directory artifacts (models, master, quants, logs) are not tracked.
+quant-workspace/
 quant-pipeline/
 models_raw/
 gguf_master/
@@ -8,6 +9,7 @@ gguf_quant/
 *.imatrix
 calibration.txt
 timing-*.log
+cuda_env.sh
 venv/
 __pycache__/
 llama.cpp/

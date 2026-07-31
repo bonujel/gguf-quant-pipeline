@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""生成 imatrix 校准语料（中英+代码混合）。
-用法: python prepare_calibration.py <输出路径> [目标KB]
-将内置多样化种子文本平铺/打散到目标大小。生产环境建议替换为更大的真实语料。
+"""Build the imatrix calibration corpus (mixed English / Chinese / code).
+Usage: python prepare_calibration.py <output_path> [target_kb]
+Shuffles the bundled seed blocks up to the target size. Replace the seed with a larger
+real corpus for production use.
 """
 import sys, os, random
 
@@ -12,7 +13,7 @@ def main():
     target_kb = int(sys.argv[2]) if len(sys.argv) > 2 else 600
     with open(SEED, "r", encoding="utf-8") as f:
         blocks = [b.strip() for b in f.read().split("\n\n") if b.strip()]
-    rng = random.Random(42)  # 固定种子，可复现
+    rng = random.Random(42)  # fixed seed for reproducibility
     buf, size = [], 0
     target = target_kb * 1024
     while size < target:
@@ -24,7 +25,7 @@ def main():
                 break
     with open(out, "w", encoding="utf-8") as f:
         f.write("\n\n".join(buf))
-    print(f"校准语料写入 {out}  约 {size//1024} KB  {len(buf)} 段")
+    print(f"wrote {out}  ~{size//1024} KB  {len(buf)} blocks")
 
 if __name__ == "__main__":
     main()

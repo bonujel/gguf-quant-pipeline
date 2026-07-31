@@ -1,51 +1,80 @@
 # gguf-quant-pipeline
 
-对标 bartowski 的 GGUF 量化流水线：给一个 HuggingFace 模型出**多档位、带 imatrix**的 GGUF 量化，供 llama.cpp / Ollama / LM Studio 本地使用。
+Produce multi-tier, imatrix-calibrated GGUF quantizations of any HuggingFace model for local
+inference with llama.cpp, Ollama, and LM Studio, and optionally publish them to HuggingFace.
 
-面向共享服务器设计，内置**磁盘硬保护**，避免撑爆共享根盘。
+## Features
 
-## 流程
+- End-to-end: download → bf16 GGUF master → imatrix → parallel multi-tier quantization → verify.
+- Seven tiers by default: `Q8_0 Q6_K Q5_K_M Q4_K_M IQ4_XS IQ3_M Q2_K`.
+- Importance matrix calibrated on a mixed English / Chinese / code corpus.
+- Disk safety guard: aborts a stage when free space drops below a threshold.
+- One-command publishing to HuggingFace with an auto-generated model card.
+- Clean GGUF metadata: imatrix and dataset are referenced by relative name, so no host paths leak.
 
-```
-下载基座(safetensors) → 转 GGUF 母版(bf16, 无损) → 算 imatrix(中英+代码校准)
-   → 多档并行量化(Q8_0/Q6_K/Q5_K_M/Q4_K_M/IQ4_XS/IQ3_M/Q2_K) → 本地验证
-```
+## Requirements
 
-## 快速开始
+- Linux, Python 3.10+, git, a C/C++ toolchain and CMake.
+- Disk space for the model in flight (raw weights + bf16 master + quantized tiers).
+- Optional: an NVIDIA GPU + CUDA toolkit for faster imatrix computation.
+
+## Install
 
 ```bash
-# 1. 拉取到服务器 ~ 目录
-git clone https://github.com/bonujel/gguf-quant-pipeline ~/gguf-quant-pipeline
-cd ~/gguf-quant-pipeline
-
-# 2. 准备环境（建 venv、装 hf/cmake、编译 llama.cpp CPU-only）
-bash setup_server.sh
-
-# 3. 跑通（默认小模型 Qwen3-4B，安全）
-bash quantize.sh
-
-# 换模型 / 调档位 / 改工作区（大盘挂载后）：
-MODEL_ID=Qwen/Qwen3-30B-A3B WORK_DIR=/data/quant-pipeline PARALLEL=2 bash quantize.sh
+git clone https://github.com/bonujel/gguf-quant-pipeline
+cd gguf-quant-pipeline
+bash setup.sh            # venv, dependencies, CPU build of llama.cpp
+bash setup_cuda.sh       # optional: CUDA toolkit + GPU build (build-cuda)
 ```
 
-## 配置（config.sh，可用环境变量覆盖）
+## Usage
 
-| 变量 | 默认 | 说明 |
+```bash
+# Quantize a model (outputs under $WORK_DIR/gguf_quant/)
+bash run.sh Qwen/Qwen3-4B
+
+# Quantize and publish to HuggingFace (run `hf auth login` first)
+bash run.sh Qwen/Qwen3-4B --publish myorg/Qwen3-4B-GGUF
+
+# Publish previously produced GGUFs on their own
+MODEL_ID=Qwen/Qwen3-4B bash publish.sh myorg/Qwen3-4B-GGUF --dry-run
+```
+
+Use a CUDA build for large models:
+
+```bash
+source "$WORK_DIR/cuda_env.sh"
+BUILD_DIR=build-cuda NGL=99 WORK_DIR=/path/to/disk bash run.sh Qwen/Qwen3-30B-A3B
+```
+
+## Configuration
+
+All settings live in `config.sh` and can be overridden via environment variables.
+
+| Variable | Default | Description |
 |---|---|---|
-| `MODEL_ID` | `Qwen/Qwen3-4B` | 目标模型 |
-| `WORK_DIR` | `~/quant-pipeline` | 工作区；大盘挂载后改 `/data/...` |
-| `MIN_FREE_GB` | `80` | **磁盘安全阈值**，低于即中止，护共享盘 |
-| `CLEAN_RAW` | `1` | 转母版后删原始 safetensors 省盘 |
-| `PARALLEL` | `4` | 并行量化进程数；大模型请调小 |
-| `NGL` | 空 | CPU-only 留空；装 CUDA 后设 `99` 提速 |
+| `MODEL_ID` | `Qwen/Qwen3-4B` | Source model repo id |
+| `WORK_DIR` | `$HOME/quant-workspace` | Working directory (point at a disk with enough space) |
+| `QUANT_TIERS` | seven tiers | Tiers to produce |
+| `MIN_FREE_GB` | `80` | Abort a stage below this much free space |
+| `CLEAN_RAW` | `1` | Delete raw safetensors after the bf16 master is built |
+| `PARALLEL` | `4` | Tiers quantized in parallel (lower for large models) |
+| `BUILD_DIR` | `build` | `build` (CPU) or `build-cuda` (GPU) |
+| `NGL` | empty | GPU layers for imatrix/verify (set `99` with a CUDA build) |
+| `HF_OWNER` | empty | Default owner for `publish.sh` short names |
 
-## 安全约束（共享服务器）
+## Scripts
 
-- **磁盘硬保护**：每阶段检查可用空间，低于 `MIN_FREE_GB` 立即中止。
-- **不发布**：本流水线只做本地产出与验证，不含上传。
-- 大模型请：调小 `PARALLEL`、用挂载的大盘作 `WORK_DIR`、必要时逐档量化并上传后删除。
+| Script | Purpose |
+|---|---|
+| `setup.sh` | Create the venv, install dependencies, build llama.cpp (CPU) |
+| `setup_cuda.sh` | Install CUDA toolkit and build a GPU llama.cpp (optional) |
+| `run.sh` | Orchestrate quantize (+ optional publish) for one model |
+| `quantize.sh` | Download, convert, imatrix, quantize, verify |
+| `publish.sh` / `publish.py` | Upload GGUFs and a generated model card to HuggingFace |
+| `prepare_calibration.py` | Build the imatrix calibration corpus |
 
-## 产物
+## Output
 
-- `gguf_quant/` 下各档 `.gguf`
-- `timing-<model>.log`：逐阶段耗时与体积（关键交付物）
+- `gguf_quant/<model>-<tier>.gguf` — the quantized models.
+- `timing-<model>.log` — per-stage timing and tier sizes.

@@ -1,25 +1,34 @@
-# config.sh —— 量化流水线配置（可用环境变量覆盖）
-# 目标模型（先用小模型跑通；大盘挂载后再换 30B-A3B）
+# config.sh — pipeline configuration. Every value can be overridden via environment variables.
+
+# Target model (HuggingFace repo id).
 MODEL_ID="${MODEL_ID:-Qwen/Qwen3-4B}"
 
-# 工作区（放模型/母版/量化产物）。大盘挂载后改成 /data/quant-pipeline
-WORK_DIR="${WORK_DIR:-$HOME/quant-pipeline}"
+# Working directory for downloads, the bf16 master and quantized outputs.
+# Point this at a disk with enough free space; a large model needs hundreds of GB in flight.
+WORK_DIR="${WORK_DIR:-$HOME/quant-workspace}"
 LLAMA_CPP="${LLAMA_CPP:-$WORK_DIR/llama.cpp}"
-# 使用哪个编译产物目录：build=CPU版，build-cuda=GPU版（配合 NGL=99）
+
+# Which llama.cpp build to use: "build" (CPU) or "build-cuda" (GPU, pair with NGL=99).
 BUILD_DIR="${BUILD_DIR:-build}"
 
-# 量化档位（对标 bartowski，覆盖高/中/低质量）
+# Quantization tiers to produce (high to low quality).
 QUANT_TIERS=(Q8_0 Q6_K Q5_K_M Q4_K_M IQ4_XS IQ3_M Q2_K)
 
-# —— 磁盘安全（共享根盘，务必守住）——
-# 工作区所在文件系统可用空间低于此值(GB)即中止，避免撑爆共享盘
+# Abort a stage when free space on WORK_DIR's filesystem drops below this many GB.
+# A safety valve on shared hosts; raise it for very large models.
 MIN_FREE_GB="${MIN_FREE_GB:-80}"
 
-# 转出 GGUF 母版后删除原始 safetensors 以省盘（1=删，0=留）
+# Delete the raw safetensors after producing the bf16 master to save disk (1=delete, 0=keep).
 CLEAN_RAW="${CLEAN_RAW:-1}"
 
-# 并行量化的进程数（小模型可并行；大模型请调小并配合逐档清理）
+# Number of tiers quantized in parallel. Lower it for large models.
 PARALLEL="${PARALLEL:-4}"
 
-# GPU 层数：CPU-only 构建时留空；装了 CUDA 后设 NGL=99 提速 imatrix/验证
+# GPU layers offloaded for imatrix/verification. Empty for CPU-only builds; set 99 with a CUDA build.
 NGL="${NGL:-}"
+
+# --- Publishing (HuggingFace) ---
+# Default owner used when a publish target is given without an explicit "owner/name".
+HF_OWNER="${HF_OWNER:-}"
+# Repo id suffix for GGUF repositories (community convention).
+HF_REPO_SUFFIX="${HF_REPO_SUFFIX:--GGUF}"
