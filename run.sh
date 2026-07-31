@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 # run.sh — orchestrate the pipeline for one model: quantize, then optionally publish.
 # Usage:
-#   bash run.sh <MODEL_ID> [--publish <hf_repo_or_name>] [--gated] [--private]
+#   bash run.sh <MODEL_ID> [--abliterate] [--publish <hf_repo_or_name>] [--gated] [--private]
 # Examples:
 #   bash run.sh Qwen/Qwen3-4B
+#   bash run.sh Qwen/Qwen3-4B --abliterate           # uncensored variant
 #   bash run.sh Qwen/Qwen3-4B --publish myorg/Qwen3-4B-GGUF
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-[ $# -ge 1 ] || { echo "usage: bash run.sh <MODEL_ID> [--publish <repo>] [--gated] [--private]"; exit 1; }
+[ $# -ge 1 ] || { echo "usage: bash run.sh <MODEL_ID> [--abliterate] [--publish <repo>] [--gated] [--private]"; exit 1; }
 export MODEL_ID="$1"; shift
 
 PUBLISH=""
 PUB_ARGS=()
 while [ $# -gt 0 ]; do
   case "$1" in
+    --abliterate) export ABLITERATE=1; shift ;;
     --publish) PUBLISH="$2"; shift 2 ;;
     --gated|--private|--dry-run) PUB_ARGS+=("$1"); shift ;;
     *) echo "[error] unknown argument: $1"; exit 1 ;;
@@ -30,6 +32,10 @@ echo "==> quantize $MODEL_ID"
 bash "$SCRIPT_DIR/quantize.sh"
 
 if [ -n "$PUBLISH" ]; then
+  # Uncensored variants are gated by default (compliance).
+  if [ "${ABLITERATE:-0}" = "1" ] && [[ ! " ${PUB_ARGS[*]} " =~ " --gated " ]]; then
+    PUB_ARGS+=(--gated)
+  fi
   echo "==> publish to $PUBLISH"
   bash "$SCRIPT_DIR/publish.sh" "$PUBLISH" "${PUB_ARGS[@]}"
 fi

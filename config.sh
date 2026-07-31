@@ -27,6 +27,16 @@ PARALLEL="${PARALLEL:-4}"
 # GPU layers offloaded for imatrix/verification. Empty for CPU-only builds; set 99 with a CUDA build.
 NGL="${NGL:-}"
 
+# --- Abliteration (uncensored variant) ---
+# Enable to insert a refusal-removal (abliteration) step before GGUF conversion (1=on, 0=off).
+ABLITERATE="${ABLITERATE:-0}"
+# Tool used for abliteration: "heretic" (default, automatic, MoE-capable).
+ABLITERATE_TOOL="${ABLITERATE_TOOL:-heretic}"
+# Extra args passed through to the abliteration tool.
+ABLITERATE_ARGS="${ABLITERATE_ARGS:-}"
+# Keep the abliterated safetensors after the GGUF master is built (1=keep, 0=delete to save disk).
+KEEP_ABLIT_SAFETENSORS="${KEEP_ABLIT_SAFETENSORS:-0}"
+
 # --- Publishing (HuggingFace) ---
 # Default owner used when a publish target is given without an explicit "owner/name".
 HF_OWNER="${HF_OWNER:-}"

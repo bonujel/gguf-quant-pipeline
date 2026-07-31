@@ -20,12 +20,17 @@ else
 fi
 
 MODEL_NAME="$(basename "$MODEL_ID")"
+[ "${ABLITERATE:-0}" = "1" ] && MODEL_NAME="${MODEL_NAME}-abliterated"
 QUANT_DIR="$WORK_DIR/gguf_quant"
 [ -f "$WORK_DIR/venv/bin/activate" ] && source "$WORK_DIR/venv/bin/activate"
+
+TEMPLATE_ARGS=()
+[ "${ABLITERATE:-0}" = "1" ] && TEMPLATE_ARGS=(--template "$SCRIPT_DIR/model_card_abliterated_template.md")
 
 exec python "$SCRIPT_DIR/publish.py" \
   --repo "$REPO" \
   --base-model "$MODEL_ID" \
   --quant-dir "$QUANT_DIR" \
   --model-name "$MODEL_NAME" \
+  "${TEMPLATE_ARGS[@]}" \
   "$@"

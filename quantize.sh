@@ -9,8 +9,12 @@ RAW_DIR="$WORK_DIR/models_raw"; MASTER_DIR="$WORK_DIR/gguf_master"
 IMATRIX_DIR="$WORK_DIR/imatrix"; QUANT_DIR="$WORK_DIR/gguf_quant"
 mkdir -p "$RAW_DIR" "$MASTER_DIR" "$IMATRIX_DIR" "$QUANT_DIR"
 
-MODEL_NAME="$(basename "$MODEL_ID")"
-RAW_PATH="$RAW_DIR/$MODEL_NAME"
+DL_NAME="$(basename "$MODEL_ID")"           # name used for the download / raw weights
+RAW_PATH="$RAW_DIR/$DL_NAME"
+# Output name gets an -abliterated suffix when the uncensored variant is requested.
+if [ "$ABLITERATE" = "1" ]; then MODEL_NAME="${DL_NAME}-abliterated"; else MODEL_NAME="$DL_NAME"; fi
+ABLIT_PATH="$WORK_DIR/abliterated/$MODEL_NAME"
+CONVERT_SRC="$RAW_PATH"                      # convert reads this; switched to ABLIT_PATH if abliterating
 MASTER="$MASTER_DIR/${MODEL_NAME}-BF16.gguf"
 IMATRIX_NAME="${MODEL_NAME}.imatrix"          # basename only — kept relative on the command line
 IMATRIX="$IMATRIX_DIR/$IMATRIX_NAME"
@@ -46,12 +50,27 @@ t0=$SECONDS
 hf download "$MODEL_ID" --local-dir "$RAW_PATH"
 record "download" $((SECONDS-t0)); guard_disk
 
+if [ "$ABLITERATE" = "1" ]; then
+  stage "1b abliterate (uncensored variant, tool=$ABLITERATE_TOOL)"
+  t0=$SECONDS
+  bash "$SCRIPT_DIR/abliterate.sh" "$RAW_PATH" "$ABLIT_PATH"
+  record "abliterate" $((SECONDS-t0)); guard_disk
+  CONVERT_SRC="$ABLIT_PATH"
+  # Raw weights no longer needed once abliterated; drop them to save disk.
+  if [ "$CLEAN_RAW" = "1" ]; then echo "[cleanup] removing raw safetensors: $RAW_PATH"; rm -rf "$RAW_PATH"; fi
+fi
+
 stage "2/6 convert to bf16 GGUF master (lossless)"
 t0=$SECONDS
-python "$CONVERT" "$RAW_PATH" --outtype bf16 --outfile "$MASTER"
+python "$CONVERT" "$CONVERT_SRC" --outtype bf16 --outfile "$MASTER"
 record "convert_bf16" $((SECONDS-t0)); guard_disk
 
-if [ "${CLEAN_RAW}" = "1" ]; then
+# Post-convert cleanup of the source safetensors.
+if [ "$ABLITERATE" = "1" ]; then
+  if [ "$KEEP_ABLIT_SAFETENSORS" != "1" ]; then
+    echo "[cleanup] removing abliterated safetensors: $ABLIT_PATH"; rm -rf "$ABLIT_PATH"; guard_disk
+  fi
+elif [ "$CLEAN_RAW" = "1" ]; then
   echo "[cleanup] removing raw safetensors: $RAW_PATH"; rm -rf "$RAW_PATH"; guard_disk
 fi
 

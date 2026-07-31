@@ -36,6 +36,9 @@ bash run.sh Qwen/Qwen3-4B
 # Quantize and publish to HuggingFace (run `hf auth login` first)
 bash run.sh Qwen/Qwen3-4B --publish myorg/Qwen3-4B-GGUF
 
+# Uncensored (abliterated) variant — needs a GPU and `bash setup_abliterate.sh` once
+bash run.sh Qwen/Qwen3-4B --abliterate
+
 # Publish previously produced GGUFs on their own
 MODEL_ID=Qwen/Qwen3-4B bash publish.sh myorg/Qwen3-4B-GGUF --dry-run
 ```
@@ -69,6 +72,7 @@ All settings live in `config.sh` and can be overridden via environment variables
 |---|---|
 | `setup.sh` | Create the venv, install dependencies, build llama.cpp (CPU) |
 | `setup_cuda.sh` | Install CUDA toolkit and build a GPU llama.cpp (optional) |
+| `setup_abliterate.sh` / `abliterate.sh` | Install and run the abliteration tool for `--abliterate` (optional) |
 | `run.sh` | Orchestrate quantize (+ optional publish) for one model |
 | `quantize.sh` | Download, convert, imatrix, quantize, verify |
 | `publish.sh` / `publish.py` | Upload GGUFs and a generated model card to HuggingFace |
