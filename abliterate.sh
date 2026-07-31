@@ -21,12 +21,17 @@ mkdir -p "$(dirname "$OUT")"
 source "$ABLITERATE_VENV/bin/activate"
 
 case "$ABLITERATE_TOOL" in
-  heretic)
-    # Heretic auto-benchmarks the machine, searches ablation configs with Optuna, and saves the
-    # decensored model. Needs a GPU. `--save` writes the result to OUT.
+  script)
+    # Headless refusal-direction removal — non-interactive, fits the pipeline.
     # shellcheck disable=SC2086
-    heretic "$IN" --save "$OUT" $ABLITERATE_ARGS
+    python "$SCRIPT_DIR/abliterate.py" --model "$IN" --out "$OUT" $ABLITERATE_ARGS
     ;;
+  heretic)
+    # Heretic is INTERACTIVE (questionary TUI): after optimizing it prompts you to choose an
+    # action and type a save path, so it cannot run unattended. Use it manually instead:
+    #   heretic --model <IN>    (then pick "Save the model to a local folder" -> OUT)
+    echo "[error] ABLITERATE_TOOL=heretic is interactive; run 'heretic --model $IN' manually." >&2
+    exit 1 ;;
   *)
     echo "[error] unknown ABLITERATE_TOOL: $ABLITERATE_TOOL" >&2; exit 1 ;;
 esac

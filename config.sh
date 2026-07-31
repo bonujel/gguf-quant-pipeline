@@ -30,9 +30,12 @@ NGL="${NGL:-}"
 # --- Abliteration (uncensored variant) ---
 # Enable to insert a refusal-removal (abliteration) step before GGUF conversion (1=on, 0=off).
 ABLITERATE="${ABLITERATE:-0}"
-# Tool used for abliteration: "heretic" (default, automatic, MoE-capable).
-ABLITERATE_TOOL="${ABLITERATE_TOOL:-heretic}"
-# Dedicated venv for the abliteration tool (kept separate so its torch/transformers do not
+# Abliteration backend:
+#   "script"  headless refusal-direction removal (abliterate.py) — default, works in a pipeline.
+#   "heretic" the Heretic tool — automatic and higher quality, but INTERACTIVE (needs a TTY),
+#             so run it manually, not inside the automated pipeline.
+ABLITERATE_TOOL="${ABLITERATE_TOOL:-script}"
+# Dedicated venv for the abliteration backend (kept separate so its torch/transformers do not
 # clash with the pinned huggingface_hub<1.0 used by the GGUF conversion step).
 ABLITERATE_VENV="${ABLITERATE_VENV:-$WORK_DIR/venv-abliterate}"
 # Extra args passed through to the abliteration tool.
