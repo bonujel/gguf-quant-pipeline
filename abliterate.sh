@@ -15,6 +15,11 @@ IN="${1:?usage: abliterate.sh <input_model_dir> <output_dir>}"
 OUT="${2:?usage: abliterate.sh <input_model_dir> <output_dir>}"
 mkdir -p "$(dirname "$OUT")"
 
+# Run inside the dedicated abliteration venv (isolated from the pipeline venv).
+[ -f "$ABLITERATE_VENV/bin/activate" ] || { echo "[error] abliteration venv missing; run setup_abliterate.sh"; exit 1; }
+# shellcheck disable=SC1091
+source "$ABLITERATE_VENV/bin/activate"
+
 case "$ABLITERATE_TOOL" in
   heretic)
     # Heretic auto-benchmarks the machine, searches ablation configs with Optuna, and saves the

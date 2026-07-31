@@ -32,6 +32,9 @@ NGL="${NGL:-}"
 ABLITERATE="${ABLITERATE:-0}"
 # Tool used for abliteration: "heretic" (default, automatic, MoE-capable).
 ABLITERATE_TOOL="${ABLITERATE_TOOL:-heretic}"
+# Dedicated venv for the abliteration tool (kept separate so its torch/transformers do not
+# clash with the pinned huggingface_hub<1.0 used by the GGUF conversion step).
+ABLITERATE_VENV="${ABLITERATE_VENV:-$WORK_DIR/venv-abliterate}"
 # Extra args passed through to the abliteration tool.
 ABLITERATE_ARGS="${ABLITERATE_ARGS:-}"
 # Keep the abliterated safetensors after the GGUF master is built (1=keep, 0=delete to save disk).
