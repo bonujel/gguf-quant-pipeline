@@ -13,9 +13,28 @@ COMPLIANCE: only abliterate Apache-2.0 base models. Even uncensored variants MUS
 for illegal content (CSAM / minors first; also CBRN, weapons, real violence, fraud, NCII).
 """
 import argparse
+import os
+import shutil
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from datasets import load_dataset
+
+# Config/tokenizer/aux files copied verbatim from the source so the downstream GGUF converter
+# (which may run a different transformers version) reads a compatible tokenizer/config.
+_SKIP_EXT = (".safetensors", ".bin", ".pt", ".pth", ".gguf")
+_SKIP_NAME = {"model.safetensors.index.json", "pytorch_model.bin.index.json"}
+
+
+def copy_aux_files(src, dst):
+    if not os.path.isdir(src):
+        return
+    for name in os.listdir(src):
+        p = os.path.join(src, name)
+        if not os.path.isfile(p):
+            continue
+        if name in _SKIP_NAME or name.endswith(_SKIP_EXT):
+            continue
+        shutil.copy2(p, os.path.join(dst, name))
 
 HARMFUL_DS = "mlabonne/harmful_behaviors"     # AdvBench mirror
 HARMLESS_DS = "mlabonne/harmless_alpaca"
@@ -97,7 +116,9 @@ def main():
 
     print(f"==> saving -> {args.out}")
     model.save_pretrained(args.out)
-    tok.save_pretrained(args.out)
+    # Overwrite config/tokenizer/aux with the originals so the GGUF converter (possibly a
+    # different transformers version) reads a compatible tokenizer and config.
+    copy_aux_files(args.model, args.out)
     print("==> abliteration done")
 
 
